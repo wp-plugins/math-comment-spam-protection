@@ -11,7 +11,7 @@
 
     Author: Michael Woehrer <michael dot woehrer at gmail dot com>
 	Author URI: http://sw-guide.de/
-    Version: 1.0
+    Version: 1.1
     Copyright © 2006-2007, all rights reserved
 
     This program is free software; you can redistribute it and/or modify
@@ -144,8 +144,8 @@ class MathCheck {
 		if ( defined('WP_SECRET') ) 
 			$inputstring .= WP_SECRET;
 	
-		// Adds the file modification time of the plugin's file and wp-config.php
-		$inputstring .= filemtime(__FILE__) . filemtime(ABSPATH . 'wp-config.php');
+		// Adds the file modification time of this file
+		$inputstring .= filemtime(__FILE__);
 	
 		// If using Wordpress: add the file modification time of wp-config.php
 		if ( defined('ABSPATH') ) {

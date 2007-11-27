@@ -3,8 +3,8 @@ Contributors: Michael_
 Donate link: http://sw-guide.de/donation/
 Tags: anti-spam, spam, captcha, math, protection
 Requires at least: 1.5.2
-Tested up to: 2.2.1
-Stable tag: 2.1
+Tested up to: 2.3.1
+Stable tag: 2.2
 
 Math Comment Spam Protection asks the visitor making the comment to answer a simple math question. This is intended to prove that the visitor is a human being and not a spam robot.
 

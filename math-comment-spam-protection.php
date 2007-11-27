@@ -3,7 +3,7 @@
 Plugin Name: Math Comment Spam Protection
 Plugin URI: http://sw-guide.de/wordpress/plugins/math-comment-spam-protection/
 Description: Asks the visitor making the comment to answer a simple math question. This is intended to prove that the visitor is a human being and not a spam robot. Example of such question: <em>What is the sum of 2 and 9?</em>
-Version: 2.1
+Version: 2.2
 Author: Michael Woehrer
 Author URI: http://sw-guide.de/
 */
@@ -59,6 +59,21 @@ $mcsp_opt = get_option('plugin_mathcommentspamprotection');
 
 
 /*******************************************************************************
+ * Let's use wp_nonce to secure the forms. 
+ * Source: http://michaeldaw.org/papers/securing_wp_plugins/
+ * Code is being implemented at different locations, always commented as "### SECURING FORMS ###"
+ ******************************************************************************/
+	if ( !function_exists('wp_nonce_field') ) {
+	        function mcsp_nonce_field($action = -1) { return; }
+	        $mcsp_nonce = -1;
+	} else {
+	        function mcsp_nonce_field($action = -1) { return wp_nonce_field($action); }
+	        $mcsp_nonce = 'mcsp-update-key';
+	}
+
+
+
+/*******************************************************************************
  * Generate math question
  ******************************************************************************/
 function math_comment_spam_protection() {
@@ -98,13 +113,13 @@ function mcsp_check_input($comment_data) {
 		// Get input validation result
 		$result = $mcsp_MathCheckObj->InputValidation($actual_result, $value_entered);
 
-		// DIE if there was an error
+		// DIE if there was an error. Apply filter for security reasons (strip JS code, etc.)
 		switch ($result) {
 			case 'No answer': 
-				mcsp_aux_die( __(stripslashes($mcsp_opt['mcsp_opt_msg_no_answer'])) );
+				mcsp_aux_die( apply_filters('pre_comment_content', stripslashes($mcsp_opt['mcsp_opt_msg_no_answer'])) );
 				break;
 			case 'Wrong answer': 
-				mcsp_aux_die( __(stripslashes($mcsp_opt['mcsp_opt_msg_wrong_answer'])) );
+				mcsp_aux_die( apply_filters('pre_comment_content', stripslashes($mcsp_opt['mcsp_opt_msg_wrong_answer'])) );
 				break;
 		}
 
@@ -161,6 +176,12 @@ function mcsp_options_subpanel() {
 
 	/* Check form submission and update options if no error occurred */
 	if (isset($_POST['submit']) ) {
+		### SECURING FORMS ###
+			if ( function_exists('current_user_can') && !current_user_can('manage_options') )
+      			die(__('Cheatin&#8217; uh?'));
+			check_admin_referer( $mcsp_nonce );
+		### SECURING FORMS ###
+
 		$optionarray_update = array (
 			'mcsp_opt_numbers' 				=> mcsp_aux_numbers_input_formatting($_POST['mcsp_opt_numbers']),
 			'mcsp_opt_msg_no_answer'		=> $_POST['mcsp_opt_msg_no_answer'],
@@ -185,6 +206,11 @@ function mcsp_options_subpanel() {
 	<p>For details, visit the <a title="Math Comment Spam Protection Plugin" href="http://sw-guide.de/wordpress/plugins/math-comment-spam-protection/">plugin's homepage</a>.
 
 	<form name="form1" method="post" action="<?php echo $_SERVER['PHP_SELF'] . '?page=' . basename(__FILE__); ?>&updated=true">
+	<?php 
+		### SECURING FORMS ###
+		mcsp_nonce_field($mcsp_nonce);
+		### SECURING FORMS ###
+	 ?> 
 
 	<div class="submit">
 		<input type="submit" name="submit" value="<?php _e('Update Options') ?> &raquo;" />
