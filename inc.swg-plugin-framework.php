@@ -4,7 +4,7 @@
  * Framework class for all plugins. For WordPress 2.3+ only
  * Note: ...rename the prefix name of this class... 
  * @author Michael Wöhrer
- * @version 1.4, May 2010
+ * @version 1.5, August 2010
  */
 class MathCommentSpamProtection_SWGPluginFramework {
 
@@ -68,8 +68,8 @@ class MathCommentSpamProtection_SWGPluginFramework {
 	}
 	function add_action_admin_menu_PluginMenuItem() {
 		// Adding Options Page
-		add_options_page($this->g_info['Name'], $this->g_info['Name'], 9, basename($this->g_info['PluginFile']), array(&$this, 'PluginOptionsPage'));
-		
+#		add_options_page($this->g_info['Name'], $this->g_info['Name'], 9, basename($this->g_info['PluginFile']), array(&$this, 'PluginOptionsPage'));
+		add_options_page($this->g_info['Name'], $this->g_info['Name'], 'manage_options', basename($this->g_info['PluginFile']), array(&$this, 'PluginOptionsPage'));
 		
 		// Add link "Settings" to the plugin in /wp-admin/plugins.php
 		global $wp_version;
@@ -78,7 +78,6 @@ class MathCommentSpamProtection_SWGPluginFramework {
 		}
 	}
 	function add_filter_plugin_action_links($links) {
-		$settings_link = '<a href="options-general.php?page=addquicktag/addquicktag.php">' . __('Settings') . '</a>';
 		$settings_link = '<a href="'.$this->GetPluginOptionsURL().'">' . __('Settings') . '</a>';
 		array_unshift($links, $settings_link);
 		return $links;
@@ -466,7 +465,7 @@ class MathCommentSpamProtection_SWGPluginFramework {
 	/**
 	 * Returns the plugin information. Uses the WP API to get the meta data from the top of the plugin file (comment)
      * @param string $info 'Name', 'Title', 'PluginURI', 'Description', 'Author', 'AuthorURI', 'Version', 'TextDomain', 'DomainPath'
-	 * @return string array; to get for example the vesion use $returnvalue['Version'] 
+	 * @return string array; to get for example the version use $returnvalue['Version'] 
 	 */
 	function GetPluginData($info) {
 		if (empty($this->g_data)) {
