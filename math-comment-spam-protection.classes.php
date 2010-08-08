@@ -11,8 +11,8 @@
 
     Author: Michael Woehrer <michael dot woehrer at gmail dot com>
 	Author URI: http://sw-guide.de/
-    Version: 1.1
-    Copyright © 2006-2007, all rights reserved
+    Version: 2.0
+    Copyright © 2006-2010, all rights reserved
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -28,55 +28,27 @@
 
 class MathCheck {
 
-
-	/**
-	 * @access public
-	 */
-	var $opt; 		// array containing the options
-	var $info;		// containing information
-
-
-	/**
-	 * MathCheck
-	 *
-	 * Constructor for the MathCheck class. Provides $info. 
-	 */ 
-	function MathCheck() {
-
-		// Default options		
-		$this->opt = array(
-			// Random, unique chars to be used in hash calculation. Please change this value.
-			'unique' => 'LnfvpVZmsSCfLf0WxXN0',
-
-			// Enter the numbers to be used. Use the number on the left side, tilde (~) as 
-			// separator and then the term to display. Separate values with comma (,).
-			// Examples:
-			//  - 1~one, 2~two, 3~three, 4~four, 5~five, 6~six, 7~seven, 8~eight, 9~nine
-			//  - 1~1, 2~2, 3~3, 4~4, 5~5, 6~6, 7~7, 8~8, 9~9, 10~10
-			'input_numbers' => '1~1, 2~2, 3~3, 4~4, 5~5, 6~6, 7~7, 8~8, 9~9, 10~10',
-		);				
-		
-	} // MathCheck()
-
-
 	/**
 	 * GenerateValues
 	 *
 	 */
-	function GenerateValues() {
+	function MathCheck_GenerateValues($input_numbers = '1~1, 2~2, 3~3, 4~4, 5~5, 6~6, 7~7, 8~8, 9~9, 10~10', $unique_key = 'LnfvpVZmsSCfLf0WxXN0') {
 
 		// Get numbers in array
-		$num_array = $this->auxNoToArray($this->opt['input_numbers']);
+		$num_array = $this->MathCheck_Aux_NumberToArray($input_numbers);
 		// Get random keys
 		$rand_keys = array_rand($num_array, 2);
 
 		// Operands for displaying...
-		$this->info['operand1'] = $num_array[$rand_keys[0]];
-		$this->info['operand2'] = $num_array[$rand_keys[1]];
-		// Generate result
-		$this->info['result'] = $this->auxGenerateHash($rand_keys[0] + $rand_keys[1], date(j));
-
-	} // GenerateValues()
+		$resultArray = array(
+			'operand1' => $num_array[$rand_keys[0]],
+			'operand2' => $num_array[$rand_keys[1]],
+			'result' => $this->MathCheck_Aux_GenerateHash($rand_keys[0] + $rand_keys[1], date('j'), $unique_key),
+		);
+		
+		return $resultArray;
+		
+	}
 
 	/**
 	 * InputValidation
@@ -84,7 +56,7 @@ class MathCheck {
 	 * Input validation. Returns an empty string if validation passed or an
 	 * error string if not passed.	 
 	 */
-	function InputValidation($actualResult, $userEntered) {
+	function MathCheck_InputValidation($actualResult, $userEntered, $unique_key = 'LnfvpVZmsSCfLf0WxXN0') {
 
 		$error = '';
 
@@ -95,8 +67,8 @@ class MathCheck {
 
 		$userEntered = preg_replace('/[^0-9]/', '', $userEntered);	// Remove everything except numbers
 
-		if ($error == '' && $actualResult != $this->auxGenerateHash($userEntered, date(j)) ) {
-			if ( ( date('G') <= 1 ) AND ( $actualResult == $this->auxGenerateHash($$userEntered, (intval(date(j))-1) ) )  ) {
+		if ($error == '' && $actualResult != $this->MathCheck_Aux_GenerateHash($userEntered, date(j), $unique_key) ) {
+			if ( ( date('G') <= 1 ) AND ( $actualResult == $this->MathCheck_Aux_GenerateHash($userEntered, (intval(date(j))-1), $unique_key ) )  ) {
 				// User has just passed midnight while writing the comment. We consider
 				// the time between 0:00 and 1:59 still as the day before to avoid
 				// error messages if user visited page on 23:50 but pressed the "Submit Comment"
@@ -108,16 +80,16 @@ class MathCheck {
 		
 		return $error;
 
-	} // InputValidation()
+	}
 
 
 	/***
-	 * auxNoToArray
+	 * MathCheck_Aux_NumberToArray
 	 * 
 	 * Converts the input string, e.g. "1~one, 2~two, 3~three, 4~four, ..."
 	 * into an array, e.g.: Array([1] => one, [2] => two, [3] => three, ...)
 	 */	 	 
-	function auxNoToArray($input) {
+	function MathCheck_Aux_NumberToArray($input) {
 	
 		$input = str_replace(' ', '', $input);	// Strip whitespace
 		$sourcearray = explode(',', $input);	// Create array
@@ -128,18 +100,18 @@ class MathCheck {
 		}
 		return $targetarray;
 
-	} // auxNoToArray()
+	}
 
 
 	/***
-	 * auxGenerateHash
+	 * MathCheck_Aux_GenerateHash
 	 * 
 	 * Generate hash
 	 */	 	 
 
-	function auxGenerateHash($inputstring, $day) {
+	function MathCheck_Aux_GenerateHash($inputstring, $day, $unique) {
 	
-		// If using Wordpress: many people have defined a WP_SECRET sting in 
+		// If using WordPress: many people have defined a WP_SECRET sting in 
 		// wp-config.php, so we add it if it exists 
 		if ( defined('WP_SECRET') ) 
 			$inputstring .= WP_SECRET;
@@ -147,14 +119,8 @@ class MathCheck {
 		// Adds the file modification time of this file
 		$inputstring .= filemtime(__FILE__);
 	
-		// If using Wordpress: add the file modification time of wp-config.php
-		if ( defined('ABSPATH') ) {
-			if ( file_exists(ABSPATH . 'wp-config.php' ) )
-				$inputstring .= filemtime(ABSPATH . 'wp-config.php');
-		}
-
-		// Adds a unique value defined in the options
-		$inputstring .= $this->opt['unique'];
+		// Adds a unique value
+		$inputstring .= $unique;
 
 		// Add the IP address of the server under which the current script is executing.
 		$inputstring .= getenv('SERVER_ADDR');
@@ -171,7 +137,7 @@ class MathCheck {
 		// Return result
 		return $enc; 
 	
-	} // auxGenerateHash()
+	}
 
 
 } 
